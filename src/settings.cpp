@@ -74,7 +74,7 @@ void showDisplaySettings(lv_event_t *e) {
     snprintf(buf, sizeof(buf), "%d%%", lv_slider_get_value(slider));
     lv_label_set_text(label_brightness, buf);
 
-    drawNavBar();
+    // drawNavBar();
 }
 
 void showSDCardSettings(lv_event_t *e) {
@@ -94,7 +94,7 @@ void showSDCardSettings(lv_event_t *e) {
     lv_bar_set_range(bar, 0, total_bytes);
     lv_bar_set_value(bar, used_bytes, LV_ANIM_OFF);
 
-    drawNavBar();
+    // drawNavBar();
 }
 
 void backup_create_cb(lv_event_t *e) {
@@ -125,7 +125,7 @@ void showBackupSettings(lv_event_t *e) {
     lv_label_set_text(restore_label, "Restore Backup");
     lv_obj_add_event_cb(restore_btn, backup_restore_cb, LV_EVENT_CLICKED, NULL);
 
-    drawNavBar();
+    // drawNavBar();
 }
 
 void showSettings(lv_event_t *e) {
@@ -150,7 +150,7 @@ void showSettings(lv_event_t *e) {
     btn = lv_list_add_btn(list, NULL, "Backup");
     lv_obj_add_event_cb(btn, showBackupSettings, LV_EVENT_CLICKED, NULL);
 
-    drawNavBar();
+    // drawNavBar();
 }
 
 void showConnectivity(lv_event_t *e) {
@@ -166,5 +166,5 @@ void showConnectivity(lv_event_t *e) {
     btn = lv_list_add_btn(list, NULL, "WiFi");
     lv_obj_add_event_cb(btn, showWiFiSettings, LV_EVENT_CLICKED, NULL);
 
-    drawNavBar();
+    // drawNavBar();
 }

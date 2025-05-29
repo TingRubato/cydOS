@@ -6,6 +6,11 @@
 #include <utils.h>
 #include "explorer.h"
 
+void info_event_handler(lv_event_t *e) {
+    Serial.println("Settings button clicked");
+    showSettings();
+}
+
 void settings_event_handler(lv_event_t *e) {
     Serial.println("Settings button clicked");
     showSettings();

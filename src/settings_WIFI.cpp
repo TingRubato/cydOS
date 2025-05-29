@@ -4,7 +4,7 @@
 #include <TFT_eSPI.h>
 #include <vector>
 #include <Arduino.h>
-#include "ui.h"
+// #include "ui.h"
 
 extern TFT_eSPI tft;
 
@@ -167,5 +167,5 @@ void showWiFiSettings(lv_event_t *e) {
         lv_obj_clear_state(sw, LV_STATE_CHECKED);
     }
 
-    drawNavBar();
+    // drawNavBar();
 }

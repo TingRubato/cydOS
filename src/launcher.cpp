@@ -29,7 +29,7 @@ void showError(const char *msg) {
     lv_obj_t *back_label = lv_label_create(back_btn);
     lv_label_set_text(back_label, "Back");
     lv_obj_add_event_cb(back_btn, home_button_event_handler, LV_EVENT_CLICKED, NULL);
-    drawNavBar();
+    // drawNavBar();
     Serial.println("Error displayed with navbar.");
 }
 
@@ -78,7 +78,7 @@ void showLauncher() {
     }
 
     appsDir.close();
-    drawNavBar();
+    // drawNavBar();
     Serial.println("SD card directories listed!");
 }
 

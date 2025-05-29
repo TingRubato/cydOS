@@ -1,9 +1,11 @@
 #include "WIFI_utils.h"
 #include <SdFat.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <vector>
 #include <WiFi.h>
 #include <FS.h>
+
+
 
 extern SdFat sd;
 
@@ -58,26 +60,26 @@ bool connectToNetwork(const char* ssid, const char* password) {
 }
 
 void saveWiFiCredentials(const char* ssid, const char* password) {
-    if (!SPIFFS.begin(true)) { // true will format SPIFFS if mount fails
-        Serial.println("SPIFFS Mount Failed");
+    if (!LittleFS.begin(true)) { // true will format LittleFS if mount fails
+        Serial.println("LittleFS Mount Failed");
         return;
     }
-    File file = SPIFFS.open("/config/wifi.csv", FILE_APPEND);
+    File file = LittleFS.open("/config/wifi.csv", FILE_APPEND);
     if (!file) {
         Serial.println("Failed to open file for writing");
         return;
     }
     file.printf("%s,%s\n", ssid, password);
     file.close();
-    SPIFFS.end();
+    LittleFS.end();
 }
 
 bool loadWiFiCredentials(const char* ssid, char* password, size_t maxLen) {
-    if (!SPIFFS.begin(true)) { // true will format SPIFFS if mount fails
-        Serial.println("SPIFFS Mount Failed");
+    if (!LittleFS.begin(true)) { // true will format LittleFS if mount fails
+        Serial.println("LittleFS Mount Failed");
         return false;
     }
-    File file = SPIFFS.open("/config/wifi.csv", FILE_READ);
+    File file = LittleFS.open("/config/wifi.csv", FILE_READ);
     if (!file) {
         Serial.println("Failed to open file for reading");
         return false;
@@ -90,11 +92,11 @@ bool loadWiFiCredentials(const char* ssid, char* password, size_t maxLen) {
         if (savedSSID == ssid) {
             savedPassword.toCharArray(password, maxLen);
             file.close();
-            SPIFFS.end();
+            LittleFS.end();
             return true;
         }
     }
     file.close();
-    SPIFFS.end();
+    LittleFS.end();
     return false;
 }

@@ -3,3 +3,9 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+include/secrets.h
+.history/
+
+.DS_Store
+
+managed_components/

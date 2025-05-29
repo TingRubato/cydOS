@@ -7,8 +7,8 @@
 #include "main.h"
 
 
-//basic ui elements like navbar anche status bar // call them when needed
-// Handler per il pulsante della torcia
+// //basic ui elements like navbar anche status bar // call them when needed
+// // Handler per il pulsante della torcia
 
 
 void drawNavBar() {
@@ -16,14 +16,14 @@ void drawNavBar() {
     short int dockmargin = 55;
     lv_obj_t *parent = lv_scr_act();
 
-    // DOCK
+//     // DOCK
     lv_obj_t *slide_menu = lv_obj_create(parent);
     lv_obj_set_size(slide_menu, 240, dockmargin);  // Ridurre l'altezza del menu
     lv_obj_set_style_bg_color(slide_menu, lv_color_hex(0xD3D3D3), 0);  // Colore grigio chiaro
     lv_obj_align(slide_menu, LV_ALIGN_BOTTOM_MID,0,0);  // Posizionare il menu appena sopra la barra
     lv_obj_clear_flag(slide_menu, LV_OBJ_FLAG_SCROLLABLE);  // Disabilita lo scrolling per il menu
 
-    // TORCH
+//     // TORCH
     lv_obj_t *torch_btn = lv_btn_create(slide_menu);
     lv_obj_set_size(torch_btn, dockiconsize, dockiconsize);  // Rendere i pulsanti più piccoli
     lv_obj_add_event_cb(torch_btn, torch_event_handler, LV_EVENT_CLICKED, NULL);
@@ -33,7 +33,7 @@ void drawNavBar() {
     lv_label_set_text(torch_label, LV_SYMBOL_EYE_OPEN);  // Utilizzare una rappresentazione testuale semplice
     lv_obj_center(torch_label);
 
-    // HOME
+//     // HOME
     lv_obj_t *home_BTN = lv_btn_create(slide_menu);
     lv_obj_set_size(home_BTN, dockiconsize, dockiconsize);  // Rendere i pulsanti più piccoli
     lv_obj_align(home_BTN, LV_ALIGN_CENTER, 0, 0);
@@ -51,4 +51,5 @@ void drawNavBar() {
     lv_obj_t *placeholder2_label = lv_label_create(placeholder2_btn);
     lv_label_set_text(placeholder2_label, LV_SYMBOL_USB);  // Placeholder text
     lv_obj_center(placeholder2_label);
+
 }
