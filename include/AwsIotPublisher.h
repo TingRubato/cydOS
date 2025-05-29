@@ -6,10 +6,11 @@
 
 #include <Arduino.h>
 #include <time.h>
+#include <ui.h>
 
 void begin();
-void postHealthStatus(int batteryLevel = 95);
-void postButtonEvent(const char* assignedTo = "default-user", const char* factoryZone = "default-zone");
+int postHealthStatus(int batteryLevel = 95);
+int postButtonEvent(const char* assignedTo = "default-user", const char* factoryZone = "default-zone");
 String currentTimestamp();
 void awsIotLoop();
 

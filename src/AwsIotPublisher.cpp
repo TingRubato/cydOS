@@ -4,6 +4,7 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include <ui.h>
 
 WiFiClientSecure net;
 PubSubClient client(net);
@@ -57,13 +58,12 @@ String currentTimestamp() {
              t->tm_hour, t->tm_min, t->tm_sec);
     return String(ts);
 }
-
-void postHealthStatus(int batteryLevel) {
+int postHealthStatus(int batteryLevel) {
     begin();
 
     if (!client.connect(THINGNAME)) {
         Serial.println("TLS connection failed! Cannot publish health status.");
-        return;
+        return 0;
     }
 
     JsonDocument doc;
@@ -77,22 +77,24 @@ void postHealthStatus(int batteryLevel) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "caller/button/welder-01/status";
-    if (client.publish(topic.c_str(), jsonBuffer)) {
+    String topic = "welder-button-01/qa-queue";
+    bool success = client.publish(topic.c_str(), jsonBuffer);
+    if (success) {
         Serial.println("Health status published successfully");
     } else {
         Serial.println("Failed to publish health status");
     }
 
     client.disconnect();
+    return success ? 1 : 0;
 }
 
-void postButtonEvent(const char* assignedTo, const char* factoryZone) {
+int postButtonEvent(const char* assignedTo, const char* factoryZone) {
     begin();
 
     if (!client.connect(THINGNAME)) {
         Serial.println("TLS connection failed! Cannot publish button event.");
-        return;
+        return 0;
     }
 
     JsonDocument doc;
@@ -106,12 +108,14 @@ void postButtonEvent(const char* assignedTo, const char* factoryZone) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "caller/button/welder-01/event";
-    if (client.publish(topic.c_str(), jsonBuffer)) {
+    String topic = "welder-button-01/qa-queue";
+    bool success = client.publish(topic.c_str(), jsonBuffer);
+    if (success) {
         Serial.println("Button event published successfully");
     } else {
         Serial.println("Failed to publish button event");
     }
 
     client.disconnect();
+    return success ? 1 : 0;
 }

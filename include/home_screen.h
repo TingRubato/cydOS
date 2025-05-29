@@ -32,6 +32,7 @@ void syncTimeWithNTP();
 /**
  * @brief Shows the home screen with NTP sync
  */
-void showHomeScreenWithWifiAndNtpSync();
+void showHomeScreenWithNtpSync();
+
 } /*extern "C"*/
 #endif

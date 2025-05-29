@@ -6,5 +6,6 @@
 void flushDisplay();
 void torchON();
 void torchOFF();
+void showPostingAnimation();
 
 #endif

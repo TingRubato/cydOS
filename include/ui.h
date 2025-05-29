@@ -4,5 +4,6 @@
 
 void drawNavBar();
 // void createGlobalHomeButton();
+// void showPostingAnimation();
 
 #endif 
