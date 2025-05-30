@@ -31,22 +31,18 @@ void touch_event_handler(lv_event_t * e) {
 }
 
 void home_button_event_handler(lv_event_t * e) {
-    lv_obj_t *scr = lv_scr_act();
-    lv_obj_clean(scr);
     Serial.println("home button event handler activated");
     drawHomeScreen();
-    }
+}
 
-void explorer_event_handler(lv_event_t * e) {
-    lv_obj_t *scr = lv_scr_act();
-    lv_obj_clean(scr);
+void explorer_event_handler(lv_event_t* e) {
     Serial.println("opening file explorer");
-    showFileExplorer();
-    }
+    showFileExplorer(e);
+}
 
 
 //NAVBAR event handlers
-void torch_event_handler(lv_event_t * e) {
+void torch_event_handler(lv_event_t * e) { // The light switch of our dreams
     lv_obj_t *btn = lv_event_get_target(e);
     if (lv_obj_get_state(btn) & LV_STATE_CHECKED) {
         lv_obj_clear_state(btn, LV_STATE_CHECKED);

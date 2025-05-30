@@ -9,8 +9,8 @@
 #include <ui.h>
 
 void begin();
-int postHealthStatus(int batteryLevel = 95);
-int postButtonEvent(const char* assignedTo = "default-user", const char* factoryZone = "default-zone");
+int postHealthStatus(int batteryLevel); // 95%? That's what we all claim to be at
+int postButtonEvent(const char* assignedTo, const char* factoryZone);
 String currentTimestamp();
 void awsIotLoop();
 

@@ -1,4 +1,3 @@
-
 #include "explorer.h"
 #include <lvgl.h>
 #include "launcher.h"
@@ -6,7 +5,7 @@
 
 
 void showFileExplorer(lv_event_t *e) {
-    if (!is_initialized) {
+    if (!is_initialized) { // First time? Let me show you around...
         if (!init_sd_card()) {
             showError("SD init failed!");
             return;
@@ -52,7 +51,7 @@ void dir_event_handler(lv_event_t *e) {
     snprintf(new_path, sizeof(new_path), "%s/%s", current_path, dirName);
     strncpy(current_path, new_path, sizeof(current_path));
 
-    showFileExplorer();
+    showFileExplorer(e);
 }
 
 void create_dir_event_handler(lv_event_t *e) {
@@ -98,7 +97,7 @@ void confirm_create_dir_event_handler(lv_event_t *e) {
     const char *dirName = lv_textarea_get_text(ta);
 
     if (create_directory(current_path, dirName)) {
-        showFileExplorer();
+        showFileExplorer(e);
     } else {
         showError("Failed to create directory");
     }
@@ -113,7 +112,7 @@ void back_to_parent_dir(lv_event_t *e) {
         // If we are at the root directory, do nothing or handle accordingly
         strcpy(current_path, "/");
     }
-    showFileExplorer();
+    showFileExplorer(e);
 }
 
 //navbar for file explorer witch back button, home button and new dir button (like a +)
@@ -160,4 +159,4 @@ void drawExplorerNavBar() {
     //center label
     lv_obj_center(back_label);
 }
-    
+

@@ -62,7 +62,7 @@ static void fourth_tab_btnm_event_cb(lv_event_t *e)
     }
 }
 
-void syncTimeWithNTP()
+void syncTimeWithNTP() // Because even devices need to know what time their bedtime is
 {
     Serial.println("Syncing time with NTP server...");
 
@@ -104,31 +104,32 @@ String getCurrentTimeString()
 
 void drawHomeScreen()
 {
-    init_sd_card();
+    if (!init_sd_card()) {
+        Serial.println("SD card init failed, aborting home screen draw.");
+        return;
+    }
     Serial.println("Initializing WiFi...");
     const char *ssid = "SpectrumSetup-21";
     const char *password = "vasttooth431";
     Serial.printf("Loading saved password for SSID: %s\n", ssid);
     Serial.printf("connecting using password: %s\n", password);
-    if (connectToNetwork(ssid, password))
-    {
-        Serial.println("Connection successful");
-        lv_obj_t *scr = lv_scr_act();
-        lv_obj_clean(scr);
-        lv_obj_t *label = lv_label_create(scr);
-        lv_label_set_text(label, "Connected successfully!");
-        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-    }
-    else
-    {
+
+    // 只清理一次 screen
+    lv_obj_t *scr = lv_scr_act();
+    lv_obj_clean(scr);
+
+    // WiFi连接失败直接return，避免后续UI操作
+    if (!connectToNetwork(ssid, password)) {
         Serial.println("Connection failed");
-        lv_obj_t *label = lv_label_create(lv_scr_act());
+        lv_obj_t *label = lv_label_create(scr);
         lv_label_set_text(label, "Failed to connect to WiFi");
         lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+        return;
     }
+    Serial.println("Connection successful");
 
-    // Create the tabview
-    lv_obj_t *tabview = lv_tabview_create(lv_scr_act(), LV_DIR_LEFT, 70);
+    // 创建 tabview
+    lv_obj_t *tabview = lv_tabview_create(scr, LV_DIR_LEFT, 70);
     lv_obj_set_size(tabview, 240, 250);
     lv_obj_align(tabview, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_color(tabview, lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 2), 0);
@@ -144,8 +145,13 @@ void drawHomeScreen()
     lv_obj_t *tab4 = lv_tabview_add_tab(tabview, "Buttons");
 
     // Info Tab Content
-    lv_obj_t *label = lv_label_create(tab1);
-    lv_label_set_text(label, getCurrentTimeString().c_str());
+    // Add WiFi status as a small label on the top right corner
+    lv_obj_t *wifi_label = lv_label_create(tab1);
+    String wifiInfo = "WiFi: " + String(WiFi.SSID()) + " (" + String(WiFi.RSSI()) + " dBm)";
+    lv_label_set_text(wifi_label, wifiInfo.c_str());
+    lv_label_set_long_mode(wifi_label, LV_LABEL_LONG_SCROLL_CIRCULAR); // Enable rolling (scrolling) text
+    lv_obj_set_style_text_color(wifi_label, lv_palette_main(LV_PALETTE_BLUE), 0);
+    lv_obj_align(wifi_label, LV_ALIGN_TOP_RIGHT, -5, 5);
 
     lv_obj_t *meter = lv_meter_create(tab1);
     lv_obj_set_size(meter, 150, 150);
@@ -177,14 +183,14 @@ void drawHomeScreen()
     lv_obj_add_event_cb(tab1, info_event_handler, LV_EVENT_CLICKED, NULL);
 
     // Settings Tab Content
-    label = lv_label_create(tab2);
-    lv_label_set_text(label, "Settings Tab");
-    lv_obj_add_event_cb(tab2, settings_event_handler, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *settings_label = lv_label_create(tab2);
+    lv_label_set_text(settings_label, "Settings Tab");
+    lv_obj_add_event_cb(settings_label, settings_event_handler, LV_EVENT_CLICKED, NULL);
 
     // Explorer Tab Content
-    label = lv_label_create(tab3);
-    lv_label_set_text(label, "Click to Figure Out");
-    lv_obj_add_event_cb(tab3, explorer_event_handler, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *explorer_label = lv_label_create(tab3);
+    lv_label_set_text(explorer_label, "Click to Figure Out");
+    lv_obj_add_event_cb(explorer_label, explorer_event_handler, LV_EVENT_CLICKED, NULL);
 
     // Buttons Tab Content
     // begin();
@@ -306,7 +312,6 @@ case 2: { // Ticket
 
     // Sync time with NTP server
     syncTimeWithNTP();
-
     lv_obj_clear_flag(lv_tabview_get_content(tabview), LV_OBJ_FLAG_SCROLLABLE);
     drawNavBar();
 }

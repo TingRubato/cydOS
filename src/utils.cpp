@@ -3,7 +3,7 @@
 #include "main.h"
 
 
-void torchON() {
+void torchON() { // Let there be light! (And by light I mean blinding LEDs)
     digitalWrite(LED_BLUE, LOW);
     digitalWrite(LED_GREEN, LOW);
     digitalWrite(LED_RED, LOW);

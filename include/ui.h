@@ -1,9 +1,18 @@
 #ifndef UI_H
+
 #define UI_H
 
 
-void drawNavBar();
-// void createGlobalHomeButton();
-// void showPostingAnimation();
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#endif 
+void resetNavBarPointers();
+void drawNavBar();
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif

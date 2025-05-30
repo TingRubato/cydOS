@@ -10,8 +10,8 @@ WiFiClientSecure net;
 PubSubClient client(net);
 
 void begin() {
-    Serial.begin(115200);
-    delay(2000);
+    Serial.begin(115200); // Wake up sleepyhead
+    delay(2000); // Coffee break before we start working
     
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 10) {
