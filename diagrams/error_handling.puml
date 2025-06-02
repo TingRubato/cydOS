@@ -1,0 +1,35 @@
+@startuml
+title MQTT Error Handling Flow
+
+start
+:Attempt Publish;
+if (Success?) then (yes)
+  :Update UI Status;
+  stop
+else (no)
+  :Increment Retry Counter;
+  if (Counter > MAX_RETRIES?) then (yes)
+    :Save to SD Card\n(/errors/event_${timestamp}.json);
+    :Set Offline Flag;
+  else (no)
+    :Calculate Backoff:\nmin(2^retry * 100ms, 5s);
+    :Wait Backoff Period;
+    repeat
+      :Retry Publish;
+      if (Network Available?) then (no)
+        :Wait 1s;
+      endif
+    repeat while (Success?) is (no) not (yes)
+  endif
+endif
+
+:Update UI;
+stop
+
+note right
+  Error Codes Handled:
+  1. 0xE101 - Network Unavailable
+  2. 0xE205 - MQTT Reject
+  3. 0xE303 - Payload Too Large
+end note
+@enduml

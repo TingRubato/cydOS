@@ -1,0 +1,28 @@
+@startuml
+title OTA Update State Machine
+
+state "Idle" as idle : Waiting for update trigger
+state "Downloading" as dl : HTTP GET /firmware.bin
+state "Verifying" as verify : SHA-256 Check
+state "Flashing" as flash : Write to partition
+state "Error" as error : Handle failure
+state "Rebooting" as reboot : Apply update
+
+[*] --> idle
+
+idle --> dl : HTTP Trigger\n(URL in MQTT payload)
+dl --> verify : File Complete
+verify --> flash : Checksum OK\n(sha256: ${hash})
+verify --> error : Hash Mismatch
+flash --> reboot : Write Verified
+flash --> error : Write Failed\nerrno=${code}
+
+error : Entry/
+  Log Error Code
+  Retry Counter++
+  if (retries < MAX_RETRIES) -> dl
+  else --> idle
+/
+
+reboot --> [*] : Restart Device
+@enduml

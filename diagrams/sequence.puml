@@ -1,0 +1,34 @@
+@startuml
+title Button Event Sequence Diagram
+
+actor User
+participant "Touch Controller" as touch
+participant "LVGL Engine" as lvgl
+participant "EventHandler" as handler
+participant "AWS Client" as aws
+participant "SD Card" as sd
+
+User -> touch : Press Button
+touch -> lvgl : Raw Coordinates (x,y,pressure)
+lvgl -> handler : Resolve UI Event
+
+alt Valid Press
+  handler -> aws : postButtonEvent(zone,assignee)
+  
+  aws -> aws : Check Connection
+  alt Connection Active
+    aws -> "AWS IoT" : MQTT Publish\n(topic: button/${zone}/press\npayload: {"assignee":"${name}"})
+    "AWS IoT" --> aws : PubAck (QoS 1)
+    aws --> handler : Success (code 200)
+  else Connection Failed
+    aws -> sd : Cache Event\n(/pending/events_${timestamp}.json)
+    sd --> aws : Write Confirm
+    handler -> lvgl : Show "Queued" Badge
+  end
+  
+else Invalid Press
+  handler -> lvgl : Show Error Toast\n"Invalid Zone"
+end
+
+handler --> User : Visual Feedback
+@enduml

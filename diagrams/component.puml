@@ -1,0 +1,41 @@
+@startuml
+title ESP32 System Component Diagram
+
+package "ESP32 Device" {
+  [LVGL UI Engine] as ui
+  [FreeRTOS Scheduler] as rtos
+  [WiFi Manager] as wifi
+  [File System] as fs
+  [Hardware Abstraction] as hw
+}
+
+package "Cloud Services" {
+  [AWS IoT Core] as iot
+  [Lambda Functions] as lambda
+  [DynamoDB] as db
+}
+
+ui --> wifi : "HTTP (NTP)"
+ui --> fs : "SPI (SD Card)"
+wifi --> iot : "MQTT (TLS 1.2)\nTopic: device/${clientId}/events\nQoS: 1"
+iot --> lambda : "Trigger Rules"
+lambda --> db : "CRUD Operations"
+
+hw --> ui : "Touch Events"
+hw --> wifi : "RF Control"
+hw --> fs : "SD Card Interface"
+
+note right of wifi
+  Error Handling:
+  1. WiFi Disconnect → Exponential Backoff
+  2. MQTT Publish Fail → Local Cache
+  3. Certificate Expiry → OTA Update
+end note
+
+note left of iot
+  Security:
+  - X.509 Cert Auth
+  - Policy: iot:Connect
+  - IAM Role: IoTDataAccess
+end note
+@enduml
