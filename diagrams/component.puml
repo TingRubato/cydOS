@@ -1,18 +1,28 @@
 @startuml
-'/**
-' * @file component.puml
-' * @brief System Component Diagram for ESP32 IoT Device
-' * 
-' * Shows architectural components and their relationships
-' * 
-' * Key Elements:
-' * - Device Firmware Components
-' * - Cloud Services Integration
-' * - Error Handling Mechanisms
-' * 
-' * Last Updated: 2025-06-01
-' * Version: 1.0
-' */
+/**
+ * @file component.puml
+ * @brief ESP32 IoT System Architecture
+ * 
+ * Component diagram showing:
+ * - Firmware module boundaries
+ * - Inter-process communication
+ * - Critical data flows
+ * - Failure domains
+ *
+ * Key Metrics:
+ * - MQTT QoS: 1 (at least once)
+ * - TLS: 1.2 with P-256
+ * - NTP Sync: 5s accuracy
+ * - SD Card: FAT32 with wear-leveling
+ *
+ * Safety Considerations:
+ * 1. Watchdog coverage for all components
+ * 2. Memory protection boundaries
+ * 3. Fail-safe defaults
+ *
+ * @version 2.1
+ * @date 2025-06-01
+ */
 title ESP32 System Component Diagram
 skinparam monochrome true
 skinparam defaultFontName Helvetica
