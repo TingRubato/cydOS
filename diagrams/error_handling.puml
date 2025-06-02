@@ -1,5 +1,25 @@
 @startuml
+'/**
+' * @file error_handling.puml
+' * @brief MQTT Publish Error Recovery Flow
+' *
+' * Documents retry logic and offline handling
+' * when cloud communication fails
+' *
+' * Features:
+' * - Exponential backoff
+' * - Offline caching
+' * - Retry limits
+' * - UI status updates
+' *
+' * Error Codes:
+' * 0xE101-E199: Network errors
+' * 0xE201-E299: MQTT protocol errors
+' * 0xE301-E399: Payload errors
+' */
 title MQTT Error Handling Flow
+skinparam ActivityBackgroundColor #F9F9F9
+skinparam ActivityBorderColor #444
 
 start
 :Attempt Publish;

@@ -1,5 +1,21 @@
 @startuml
+'/**
+' * @file component.puml
+' * @brief System Component Diagram for ESP32 IoT Device
+' * 
+' * Shows architectural components and their relationships
+' * 
+' * Key Elements:
+' * - Device Firmware Components
+' * - Cloud Services Integration
+' * - Error Handling Mechanisms
+' * 
+' * Last Updated: 2025-06-01
+' * Version: 1.0
+' */
 title ESP32 System Component Diagram
+skinparam monochrome true
+skinparam defaultFontName Helvetica
 
 package "ESP32 Device" {
   [LVGL UI Engine] as ui

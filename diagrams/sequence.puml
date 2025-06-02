@@ -1,5 +1,24 @@
 @startuml
+'/**
+' * @file sequence.puml 
+' * @brief Button Press Event Sequence Flow
+' *
+' * Documents the end-to-end flow from physical button press
+' * to cloud notification and error handling
+' *
+' * Sequence:
+' * 1. Physical interaction
+' * 2. UI event processing  
+' * 3. Cloud communication
+' * 4. Offline fallback
+' *
+' * Error Conditions:
+' * - Invalid touch coordinates
+' * - Network unavailable
+' */
 title Button Event Sequence Diagram
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
 
 actor User
 participant "Touch Controller" as touch

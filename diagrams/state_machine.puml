@@ -1,5 +1,27 @@
 @startuml
+'/**
+' * @file state_machine.puml
+' * @brief OTA Firmware Update State Machine
+' *
+' * Defines states and transitions for over-the-air updates
+' * Includes error recovery and verification steps
+' *
+' * States:
+' * - Downloading: Firmware transfer
+' * - Verifying: Integrity check
+' * - Flashing: Write to partition
+' * - Error: Recovery handling
+' *
+' * Transition Triggers:
+' * - MQTT messages
+' * - Checksum results
+' * - Write operations
+' */
 title OTA Update State Machine
+skinparam state {
+    FontSize 13
+    FontStyle bold
+}
 
 state "Idle" as idle : Waiting for update trigger
 state "Downloading" as dl : HTTP GET /firmware.bin
