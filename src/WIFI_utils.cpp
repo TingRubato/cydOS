@@ -56,6 +56,11 @@ bool connectToNetwork(const char* ssid, const char* password) {
     const uint8_t maxRetries = 5;
     const uint16_t baseDelayMs = 1000;
     
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    Serial.print("Using password: ");
+    Serial.println(password);
+
     WiFi.disconnect(true);
     WiFi.begin(ssid, password);
 
