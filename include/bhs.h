@@ -7,7 +7,7 @@ extern "C" {
 
 #include "lvgl.h"
 
-extern const lv_img_dsc_t bhs;
+extern const lv_img_dsc_t BHS;
 
 #ifdef __cplusplus
 }
