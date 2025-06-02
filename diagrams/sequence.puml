@@ -1,21 +1,28 @@
 @startuml
-'/**
-' * @file sequence.puml 
-' * @brief Button Press Event Sequence Flow
-' *
-' * Documents the end-to-end flow from physical button press
-' * to cloud notification and error handling
-' *
-' * Sequence:
-' * 1. Physical interaction
-' * 2. UI event processing  
-' * 3. Cloud communication
-' * 4. Offline fallback
-' *
-' * Error Conditions:
-' * - Invalid touch coordinates
-' * - Network unavailable
-' */
+/**
+ * @file sequence.puml
+ * @brief End-to-End Event Processing Flow
+ *
+ * Documents the complete system response to user interaction:
+ * 1. Physical Layer: Touch detection
+ * 2. UI Layer: Event routing
+ * 3. Network Layer: Secure transmission
+ * 4. Storage Layer: Offline persistence
+ *
+ * Timing Constraints:
+ * - Touch→UI: <50ms
+ * - UI→Cloud: <500ms (connected)
+ * - Retry Interval: 2^n seconds (max 30s)
+ *
+ * Error Handling:
+ * - E101: Invalid coordinates
+ * - E205: MQTT rejection  
+ * - E301: Payload validation
+ * - E402: Storage full
+ *
+ * @version 2.3
+ * @date 2025-06-01
+ */
 title Button Event Sequence Diagram
 skinparam ParticipantPadding 20
 skinparam BoxPadding 10

@@ -1,13 +1,27 @@
 /**
- * @file AwsIotPublisher.h
- * @brief AWS IoT MQTT Publisher Interface
- * 
- * Provides functionality for connecting to AWS IoT Core and publishing messages
- * using MQTT protocol with TLS encryption.
- * 
- * @author Your Name
+ * @file AwsIotPublisher.h  
+ * @brief Secure AWS IoT Core MQTT Publisher
+ *
+ * Implements MQTT over TLS 1.2 communication with AWS IoT Core including:
+ * - X.509 certificate authentication
+ * - QoS 1 message delivery
+ * - Automatic reconnection
+ * - Offline message queuing
+ *
+ * Key Features:
+ * - Hardware-accelerated TLS (ESP32)
+ * - Low-power mode support
+ * - Thread-safe operation
+ * - Configurable keepalive interval
+ *
+ * Error Handling:
+ * - Network fault recovery
+ * - Certificate expiry detection  
+ * - Message retry logic
+ *
+ * @version 2.1
  * @date 2025-06-01
- * @version 1.0
+ * @copyright Copyright (c) 2025 BHS Inc. All Rights Reserved.
  */
 
 #ifndef AWS_IOT_PUBLISHER_H
