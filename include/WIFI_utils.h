@@ -15,6 +15,7 @@
 
 #include <WiFi.h>
 #include <vector>
+#include <WString.h>  // For String class
 
 /**
  * @brief Initialize WiFi hardware
@@ -49,7 +50,7 @@ String getCurrentNetworkInfo();
  * @brief Scan for available WiFi networks
  * @return Vector of SSID strings
  */
-std::vector<String> scanNetworks();
+std::vector<::String> scanNetworks();
 
 /**
  * @brief Connect to specified WiFi network
