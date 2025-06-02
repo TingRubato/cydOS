@@ -10,6 +10,7 @@ void disableWiFi();
 bool isWiFiEnabled();
 String getCurrentNetworkInfo();
 std::vector<String> scanNetworks();
+// Note: connectToNetwork will print the SSID and password to Serial for debugging special character support.
 bool connectToNetwork(const char* ssid, const char* password);
 void saveWiFiCredentials(const char* ssid, const char* password);
 bool loadWiFiCredentials(const char* ssid, char* password, size_t maxLen);
