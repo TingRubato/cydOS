@@ -42,13 +42,13 @@ String getCurrentNetworkInfo() {
     return info;
 }
 
-std::vector<String> scanNetworks() {
-    std::vector<String> networks;
+uint8_t scanNetworks(String networks[], uint8_t maxNetworks) {
     int n = WiFi.scanNetworks();
-    for (int i = 0; i < n; ++i) {
-        networks.push_back(WiFi.SSID(i));
+    uint8_t count = min(n, (int)maxNetworks);
+    for (uint8_t i = 0; i < count; ++i) {
+        networks[i] = WiFi.SSID(i);
     }
-    return networks;
+    return count;
 }
 
 bool connectToNetwork(const char* ssid, const char* password) {

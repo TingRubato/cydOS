@@ -50,7 +50,12 @@ String getCurrentNetworkInfo();
  * @brief Scan for available WiFi networks
  * @return Vector of SSID strings
  */
-std::vector<::String> scanNetworks();
+/**
+ * @brief Scan for available WiFi networks
+ * @param[out] networks Array to store found SSIDs (max 20)
+ * @return Number of networks found
+ */
+uint8_t scanNetworks(String networks[], uint8_t maxNetworks);
 
 /**
  * @brief Connect to specified WiFi network
