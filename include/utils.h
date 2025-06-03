@@ -34,29 +34,34 @@ extern "C" {
 #endif
 
 /**
- * @brief Force display buffer flush
- * @note Blocks until flush completes
- * @warning Must be called from main thread
+ * @brief Force display buffer flush.
+ *
+ * Blocks until the flush operation completes. This ensures that all pending display updates are rendered.
+ *
+ * @note Must be called from the main thread to avoid concurrency issues.
  */
 void flushDisplay();
 
 /**
- * @brief Enable all indicator LEDs at maximum brightness
- * @note Uses direct GPIO writes for lowest latency
+ * @brief Enable all indicator LEDs at maximum brightness.
+ *
+ * Uses direct GPIO writes for lowest latency. Useful for signaling or debugging.
  */
 void torchON();
 
-/** 
- * @brief Disable all indicator LEDs
- * @note Implements graceful power-down sequence
+/**
+ * @brief Disable all indicator LEDs.
+ *
+ * Implements a graceful power-down sequence for the LEDs to avoid abrupt transitions.
  */
 void torchOFF();
 
 /**
- * @brief Show system activity animation
- * @brief Shows posting progress animation
- * @note Uses non-blocking timers
- * @warning Must call flushDisplay() after
+ * @brief Show system activity animation (posting progress).
+ *
+ * Uses non-blocking timers to animate the display, indicating that a posting operation is in progress.
+ *
+ * @note Must call flushDisplay() after to ensure the animation is rendered.
  */
 void showPostingAnimation();
 
@@ -65,12 +70,3 @@ void showPostingAnimation();
 #endif
 
 #endif /* UTILS_H */
-
-
-
-void flushDisplay();
-void torchON();
-void torchOFF();
-void showPostingAnimation();
-
-#endif

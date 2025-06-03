@@ -1,3 +1,9 @@
+/**
+ * @file SD_utils.cpp
+ * @brief Implements SD card filesystem utilities for cydOS.
+ *
+ * Provides functions for SD card initialization, directory management, and file listing.
+ */
 #include <SdFat.h>
 #include <TFT_eSPI.h>
 #include "SD_utils.h"

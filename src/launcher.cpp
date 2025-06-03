@@ -1,11 +1,18 @@
+/**
+ * @file launcher.cpp
+ * @brief Implements the application launcher UI and logic for cydOS.
+ *
+ * Handles SD card app directory listing, app selection, and OTA installation logic.
+ */
 #include <TFT_eSPI.h>
 #include <SdFat.h>
 #include "lvgl.h"
 #include "utils.h"
 #include "event_handlers.h"
 #include "ui.h"
-#include "SD_utils.h"  // Include the new header for SD utilities
-#include "OTA_utils.h" // Include the new header for OTA utilities
+#include "SD_utils.h"
+#include "OTA_utils.h"
+#include <stdlib.h>
 
 extern TFT_eSPI tft;
 extern SdFat sd;
@@ -15,6 +22,14 @@ void showError(const char *msg);
 void showLauncher();
 void install_event_handler(lv_event_t *e);
 void confirm_install_event_handler(lv_event_t *e);
+
+// Free user data callback
+static void free_user_data_event_cb(lv_event_t *e) {
+    if (lv_event_get_code(e) == LV_EVENT_DELETE) {
+        void *user_data = lv_obj_get_user_data(lv_event_get_target(e));
+        if (user_data) free(user_data);
+    }
+}
 
 void showError(const char *msg) {
     lv_obj_t *scr = lv_scr_act();
@@ -72,6 +87,7 @@ void showLauncher() {
             char *dirNameCopy = strdup(dirName);
             lv_obj_set_user_data(btn, dirNameCopy);
             lv_obj_add_event_cb(btn, install_event_handler, LV_EVENT_CLICKED, dirNameCopy);
+            lv_obj_add_event_cb(btn, free_user_data_event_cb, LV_EVENT_DELETE, NULL);
             Serial.printf("Created button for directory: %s\n", dirName);
         }
         entry.close();

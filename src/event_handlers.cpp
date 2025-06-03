@@ -1,3 +1,9 @@
+/**
+ * @file event_handlers.cpp
+ * @brief Implements LVGL event handlers for cydOS UI components.
+ *
+ * Contains callback functions for UI navigation, launcher, explorer, and LED control.
+ */
 #include "event_handlers.h"
 #include "settings.h"
 #include "launcher.h"

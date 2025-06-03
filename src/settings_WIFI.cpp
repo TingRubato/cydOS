@@ -1,9 +1,17 @@
+/**
+ * @file settings_WIFI.cpp
+ * @brief Implements WiFi settings UI and connection logic for cydOS.
+ *
+ * Handles user interaction for WiFi network selection, password entry, and connection management using LVGL.
+ * Integrates with WiFi utility functions for scanning, connecting, and credential storage.
+ */
 #include "settings_WIFI.h"
 #include "WIFI_utils.h"
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <vector>
 #include <Arduino.h>
+#include <stdlib.h>
 // #include "ui.h"
 
 extern TFT_eSPI tft;
@@ -12,6 +20,14 @@ static lv_obj_t *wifi_list;
 
 // Forward declare the function
 void connect_to_wifi_event_cb(lv_event_t *e);
+
+// Free user data callback
+static void free_user_data_event_cb(lv_event_t *e) {
+    if (lv_event_get_code(e) == LV_EVENT_DELETE) {
+        void *user_data = lv_obj_get_user_data(lv_event_get_target(e));
+        if (user_data) free(user_data);
+    }
+}
 
 void prompt_for_password(const char* ssid) {
     lv_obj_t *scr = lv_scr_act();
@@ -109,7 +125,11 @@ void connect_to_wifi_event_cb(lv_event_t *e) {
 }
 
 void showAvailableNetworks() {
-    std::vector<String> networks = scanNetworks();
+    const uint8_t maxNetworks = 20; // Define the maximum number of networks to scan
+    String networksArray[maxNetworks]; // Create an array to hold the network names
+    uint8_t networkCount = scanNetworks(networksArray, maxNetworks); // Call scanNetworks with arguments
+
+    std::vector<String> networks(networksArray, networksArray + networkCount); // Convert array to vector
     Serial.println("Available Networks:");
     for (const auto &network : networks) {
         Serial.println(network);
@@ -121,6 +141,7 @@ void showAvailableNetworks() {
         }
         lv_obj_set_user_data(btn, network_copy);
         lv_obj_add_event_cb(btn, connect_to_wifi_event_cb, LV_EVENT_CLICKED, network_copy);
+        lv_obj_add_event_cb(btn, free_user_data_event_cb, LV_EVENT_DELETE, NULL);
     }
 }
 

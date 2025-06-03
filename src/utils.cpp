@@ -1,3 +1,9 @@
+/**
+ * @file utils.cpp
+ * @brief Implements hardware abstraction utility functions for cydOS.
+ *
+ * Provides LED control and other low-level hardware utilities.
+ */
 #include "utils.h"
 #include <Arduino.h>
 #include "main.h"

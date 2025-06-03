@@ -25,23 +25,67 @@
 extern "C" {
 #endif
 
-// System Settings
+/**
+ * @brief Initialize system settings and persistent storage.
+ *
+ * Loads settings from NVS and prepares the settings subsystem.
+ */
 void initSettings();
+
+/**
+ * @brief Show the main settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showSettings(lv_event_t *e = nullptr);
 
-// Display Settings
+/**
+ * @brief Save display brightness setting.
+ *
+ * @param brightness Brightness value to save (0-255).
+ */
 void saveBrightness(int brightness);
+
+/**
+ * @brief Load display brightness setting.
+ *
+ * @return The saved brightness value (0-255).
+ */
 int loadBrightness();
+
+/**
+ * @brief Show the display settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showDisplaySettings(lv_event_t *e = nullptr);
 
-// Connectivity Settings  
+/**
+ * @brief Show the connectivity settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showConnectivity(lv_event_t *e = nullptr);
 
-// Hardware Settings
+/**
+ * @brief Show the sensors settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showSensorsSettings(lv_event_t *e = nullptr);
+
+/**
+ * @brief Show the SD card settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showSDCardSettings(lv_event_t *e = nullptr);
 
-// Data Management
+/**
+ * @brief Show the backup settings UI.
+ *
+ * @param e (Optional) LVGL event pointer. If nullptr, shows the settings directly.
+ */
 void showBackupSettings(lv_event_t *e = nullptr);
 
 #ifdef __cplusplus

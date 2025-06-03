@@ -1,3 +1,9 @@
+/**
+ * @file lv_example_tabview_1.cpp
+ * @brief Example implementation of LVGL tabview widget for cydOS.
+ *
+ * Demonstrates tabview creation, styling, and button matrix event handling.
+ */
 #include "lv_example_widgets.h"
 #if LV_USE_TABVIEW && LV_BUILD_EXAMPLES
 

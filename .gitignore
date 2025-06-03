@@ -10,3 +10,5 @@ include/secrets.h
 
 managed_components/
 .aider*
+
+email-template.json

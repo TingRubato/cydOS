@@ -1,3 +1,9 @@
+/**
+ * @file OTA_utils.cpp
+ * @brief Implements OTA update logic for cydOS using SD card binaries.
+ *
+ * Handles flashing of bootloader, firmware, and boot_app0 partitions from SD card.
+ */
 #include "OTA_utils.h"
 #include "SD_utils.h"
 #include "lvgl.h"

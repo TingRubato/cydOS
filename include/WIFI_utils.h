@@ -33,93 +33,99 @@
 #ifndef WIFI_UTILS_H
 #define WIFI_UTILS_H
 
-#include <WiFi.h>
-#include <vector>
-#include <WString.h>  // For String class
+#include <stdint.h>
+#include <stddef.h>
+#include <Arduino.h>
 
 /**
- * @brief Initialize WiFi hardware
- * 
+ * @brief Initialize WiFi hardware.
+ *
  * Sets WiFi mode to STA (Station) and disconnects any existing connection.
  */
 void initWiFi();
 
 /**
- * @brief Enable WiFi radio
+ * @brief Enable WiFi radio.
  */
 void enableWiFi();
 
 /**
- * @brief Disable WiFi radio
+ * @brief Disable WiFi radio.
  */
 void disableWiFi();
 
 /**
- * @brief Check if WiFi is enabled
- * @return true if WiFi is enabled, false otherwise
+ * @brief Check if WiFi is enabled.
+ *
+ * @return true if WiFi is enabled, false otherwise.
  */
 bool isWiFiEnabled();
 
 /**
- * @brief Get current network connection info
- * @return Formatted string with SSID, IP, RSSI etc.
+ * @brief Get current network connection info.
+ *
+ * @return Formatted string with SSID, IP, RSSI, etc.
  */
 String getCurrentNetworkInfo();
 
 /**
- * @brief Scan for available WiFi networks
- * @return Vector of SSID strings
- */
-/**
- * @brief Scan for available WiFi networks
- * @param[out] networks Array to store found SSIDs (max 20)
- * @return Number of networks found
+ * @brief Scan for available WiFi networks.
+ *
+ * @param[out] networks Array to store found SSIDs (max 20).
+ * @param maxNetworks Maximum number of networks to store.
+ * @return Number of networks found.
  */
 uint8_t scanNetworks(String networks[], uint8_t maxNetworks);
 
 /**
- * @brief Connect to specified WiFi network
- * @param ssid Network SSID
- * @param password Network password
- * @return true if connection succeeded, false otherwise
- * @note Prints SSID/password to Serial for debugging special characters
+ * @brief Connect to specified WiFi network.
+ *
+ * @param ssid Network SSID.
+ * @param password Network password.
+ * @return true if connection succeeded, false otherwise.
+ * @note Prints SSID/password to Serial for debugging special characters.
  */
 bool connectToNetwork(const char* ssid, const char* password);
 
 /**
- * @brief Save WiFi credentials to persistent storage
- * @param ssid Network SSID to save
- * @param password Network password to save
+ * @brief Save WiFi credentials to persistent storage.
+ *
+ * @param ssid Network SSID to save.
+ * @param password Network password to save.
  */
 void saveWiFiCredentials(const char* ssid, const char* password);
 
 /**
- * @brief Load WiFi password for given SSID
- * @param ssid Network SSID to lookup
- * @param password Output buffer for password
- * @param maxLen Maximum length of password buffer
- * @return true if credentials were found, false otherwise
+ * @brief Load WiFi password for given SSID.
+ *
+ * @param ssid Network SSID to lookup.
+ * @param password Output buffer for password.
+ * @param maxLen Maximum length of password buffer.
+ * @return true if credentials were found, false otherwise.
  */
 bool loadWiFiCredentials(const char* ssid, char* password, size_t maxLen);
 
 // TLS-related functions
 /**
- * @brief Configure TLS certificates for secure connections
- * @param caCert CA certificate in PEM format
- * @param clientCert Client certificate in PEM format
- * @param clientKey Client private key in PEM format
+ * @brief Configure TLS certificates for secure connections.
+ *
+ * @param caCert CA certificate in PEM format.
+ * @param clientCert Client certificate in PEM format.
+ * @param clientKey Client private key in PEM format.
  */
 void setTLSCertificates(const char* caCert, const char* clientCert, const char* clientKey);
 
 /**
- * @brief Disable certificate verification (insecure)
- * @warning Only use for testing/debugging
+ * @brief Disable certificate verification (insecure).
+ *
+ * @warning Only use for testing/debugging.
  */
 void setInsecureMode();
 
 /**
- * @brief Verify server certificate
- * @return true if certificate is valid, false otherwise
+ * @brief Verify server certificate.
+ *
+ * @return true if certificate is valid, false otherwise.
  */
 bool verifyCertificate();
 

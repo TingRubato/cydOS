@@ -1,3 +1,9 @@
+/**
+ * @file settings.cpp
+ * @brief Implements device settings management and UI for cydOS.
+ *
+ * Handles persistent configuration, display, connectivity, SD card, and backup settings.
+ */
 #include <TFT_eSPI.h>
 #include <lvgl.h>
 #include <nvs.h>

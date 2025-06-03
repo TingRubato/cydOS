@@ -1,6 +1,8 @@
 /**
  * @file lv_conf.h
- * Configuration file for v8.3.9
+ * @brief LVGL configuration file for cydOS (v8.3.9).
+ *
+ * Contains compile-time configuration options for LVGL graphics library.
  */
 
 /*
@@ -362,9 +364,9 @@
 /*Montserrat fonts with ASCII range and some symbols using bpp = 4
  *https://fonts.google.com/specimen/Montserrat*/
 #define LV_FONT_MONTSERRAT_8  0
-#define LV_FONT_MONTSERRAT_10 0
-#define LV_FONT_MONTSERRAT_12 0
-#define LV_FONT_MONTSERRAT_14 1
+#define LV_FONT_MONTSERRAT_10 1
+#define LV_FONT_MONTSERRAT_12 1
+#define LV_FONT_MONTSERRAT_14 0
 #define LV_FONT_MONTSERRAT_16 0
 #define LV_FONT_MONTSERRAT_18 0
 #define LV_FONT_MONTSERRAT_20 0
@@ -399,7 +401,7 @@
 #define LV_FONT_CUSTOM_DECLARE
 
 /*Always set a default font*/
-#define LV_FONT_DEFAULT &lv_font_montserrat_14
+#define LV_FONT_DEFAULT &lv_font_montserrat_12
 
 /*Enable handling large font and/or fonts with a lot of characters.
  *The limit depends on the font size, font face and bpp.
@@ -747,7 +749,7 @@
 #define LV_USE_DEMO_BENCHMARK 1
 #if LV_USE_DEMO_BENCHMARK
 /*Use RGB565A8 images with 16 bit color depth instead of ARGB8565*/
-#define LV_DEMO_BENCHMARK_RGB565A8 0
+#define LV_DEMO_BENCHMARK_RGB565A8 1
 #endif
 
 /*Stress test for LVGL*/

@@ -1,8 +1,22 @@
+/**
+ * @file explorer.cpp
+ * @brief Implements the file explorer UI and directory navigation logic for cydOS.
+ *
+ * Handles SD card directory listing, navigation, and file operations.
+ */
 #include "explorer.h"
 #include <lvgl.h>
 #include "launcher.h"
 #include "event_handlers.h"
+#include <stdlib.h>
 
+// Free user data callback
+static void free_user_data_event_cb(lv_event_t *e) {
+    if (lv_event_get_code(e) == LV_EVENT_DELETE) {
+        void *user_data = lv_obj_get_user_data(lv_event_get_target(e));
+        if (user_data) free(user_data);
+    }
+}
 
 void showFileExplorer(lv_event_t *e) {
     if (!is_initialized) { // First time? Let me show you around...
@@ -36,6 +50,7 @@ void showFileExplorer(lv_event_t *e) {
         char *file_name_copy = strdup(file.name);
         lv_obj_set_user_data(btn, file_name_copy);
         lv_obj_add_event_cb(btn, dir_event_handler, LV_EVENT_CLICKED, file_name_copy);
+        lv_obj_add_event_cb(btn, free_user_data_event_cb, LV_EVENT_DELETE, NULL);
     }
 
     dir.close();

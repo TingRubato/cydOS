@@ -1,11 +1,14 @@
+/**
+ * @file WIFI_utils.cpp
+ * @brief Implements WiFi management utilities for cydOS.
+ *
+ * Provides functions for WiFi initialization, connection, scanning, and credential management.
+ */
 #include "WIFI_utils.h"
 #include "file_utils.h"
 #include <SdFat.h>
-#include <LittleFS.h>
 #include <vector>
 #include <WiFi.h>
-#include <FS.h>
-#include <algorithm>
 
 using std::min;
 

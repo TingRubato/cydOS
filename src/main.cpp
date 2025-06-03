@@ -1,3 +1,10 @@
+/**
+ * @file main.cpp
+ * @brief cydOS main application entry point for ESP32-2432S028R
+ *
+ * This file initializes the display, touchscreen, LVGL, WiFi, and core tasks for cydOS.
+ * It manages the main event loop and hardware abstraction for the GUI OS.
+ */
 #include <TFT_eSPI.h>
 #include <XPT2046_Bitbang.h>
 #include "home_screen.h"
@@ -5,6 +12,23 @@
 #include "main.h"
 #include <time.h>
 #include "WIFI_utils.h"
+#include <WiFi.h>
+
+/**
+ * @brief Callback to update the LVGL UI after WiFi connection is established.
+ * @param param Unused parameter (for compatibility with lv_async_call)
+ */
+void update_lvgl_on_wifi_connect(void *param) {
+    Serial.println("[LVGL] Updating UI after WiFi connected!");
+    syncTimeWithNTP();
+
+    lv_obj_t *scr = lv_scr_act();
+    lv_obj_clean(scr);
+    lv_obj_t *label = lv_label_create(scr);
+    lv_label_set_text(label, "WiFi + NTP Ready!");
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    drawHomeScreen();
+}
 
 // Initialize the SPI class
 SPIClass mySpi = SPIClass(VSPI);
@@ -17,11 +41,25 @@ static lv_color_t buf[240 * 320 / 10];
 
 TFT_eSPI tft = TFT_eSPI(240, 320);
 static bool touchPressed = false;
+
+/**
+ * @brief Get the system uptime in milliseconds.
+ * @return Milliseconds since boot.
+ */
 unsigned long getSystemTime() { return millis(); } 
 
 static lv_color_t *dma_buf = NULL;
 static bool dma_initialized = false;
 
+// Declare and initialize `wifiConnected`
+static bool wifiConnected = false;
+
+/**
+ * @brief LVGL display flush callback. Transfers a rendered area to the TFT display.
+ * @param disp_drv LVGL display driver pointer
+ * @param area Area to update
+ * @param color_p Pointer to color buffer
+ */
 void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
     if(!dma_initialized) {
         dma_buf = (lv_color_t*)heap_caps_malloc(LV_HOR_RES * 10 * sizeof(lv_color_t), 
@@ -46,6 +84,11 @@ void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     lv_disp_flush_ready(disp_drv);
 }
 
+/**
+ * @brief LVGL touchpad read callback. Reads the current touch state and position.
+ * @param indev_drv LVGL input device driver pointer
+ * @param data Pointer to input data structure to fill
+ */
 void my_touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data) // Touchy-feely function
 {
     TouchPoint p = ts.getTouch();
@@ -65,6 +108,9 @@ void my_touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data) // Touch
     // digitalWrite(XPT2046_CS, HIGH); // 保持注释
 }
 
+/**
+ * @brief Clears the display and LVGL screen objects.
+ */
 void flushDisplay()
 {
     tft.fillScreen(TFT_BLACK);
@@ -77,76 +123,59 @@ void flushDisplay()
 static TaskHandle_t lvglTaskHandle = NULL;
 static TaskHandle_t wifiTaskHandle = NULL;
 
+/**
+ * @brief Task for running the LVGL timer handler and UI updates.
+ * @param pvParameters Unused parameter
+ */
 void lvglTask(void *pvParameters) {
-    for(;;) {
+    drawHomeScreen();  // Only draw initial screen; avoid running WiFi here
+
+    while (1) {
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(5));
     }
 }
 
+/**
+ * @brief Task for managing WiFi connection and reconnection logic.
+ * @param pvParameters Unused parameter
+ */
 void wifiTask(void *pvParameters) {
-    for(;;) {
-        if(WiFi.status() != WL_CONNECTED) {
-            // Handle reconnection logic
+    const char *ssid = "IoT-AP";
+    const char *password = "Battery1488!!";
+
+    if (connectToNetwork(ssid, password)) {
+        wifiConnected = true;
+        // Signal LVGL thread safely
+        lv_async_call(update_lvgl_on_wifi_connect, NULL);
+    } else {
+        Serial.println("[WiFi] Failed to connect.");
+    }
+
+    while (1) {
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("[WiFi] Disconnected, trying to reconnect...");
+            connectToNetwork(ssid, password);
         }
         vTaskDelay(pdMS_TO_TICKS(10000)); // Check every 10 seconds
     }
 }
 
+/**
+ * @brief Arduino setup function. Initializes hardware, LVGL, and creates core tasks.
+ */
 void setup() {
-    esp_err_t err = ESP_OK;
-    
-    // Core 0 tasks (high priority)
-    xTaskCreatePinnedToCore(
-        lvglTask,       // Task function
-        "LVGL",         // Task name
-        8192,          // Stack size
-        NULL,           // Parameters
-        3,              // Priority (higher than wifi)
-        &lvglTaskHandle,// Task handle
-        0               // Core 0
-    );
-
-    // Core 1 tasks (lower priority)
-    xTaskCreatePinnedToCore(
-        wifiTask,       // Task function
-        "WiFi",         // Task name
-        4096,           // Stack size
-        NULL,           // Parameters
-        2,              // Priority
-        &wifiTaskHandle,// Task handle
-        1               // Core 1
-    );
-
     Serial.begin(115200);
-    if(!Serial) {
-        ESP_LOGI(ESP_FAIL, "Serial init failed");
-        return;
-    }
 
+    // Initialize display
     tft.begin();
-    // tft.begin() returns void, so just call and optionally check display with tft.readID() or similar if needed
-
     tft.setRotation(0);
-
     mySpi.begin(25, 39, 32, 33);
-    // 若 XPT2046_Bitbang 支持 begin()，则调用
     ts.begin();
 
+    // Initialize LVGL
     lv_init();
-
-    // pinMode(LED_RED, OUTPUT);
-    // pinMode(LED_GREEN, OUTPUT);
-    // pinMode(LED_BLUE, OUTPUT);
-    // digitalWrite(LED_RED, HIGH);
-    // digitalWrite(LED_GREEN, HIGH);
-    // digitalWrite(LED_BLUE, HIGH);
-
-    ESP_LOGI(ESP_FAIL, "LVGL init failed");
-
     lv_disp_draw_buf_init(&draw_buf, buf, NULL, 240 * 320 / 10);
-    // lv_init() already called above
-
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = 240;
@@ -161,16 +190,15 @@ void setup() {
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    // Initialize WiFi
-    initWiFi();
-    
-    // Start UI
-    drawHomeScreen();
+    // Create tasks
+    xTaskCreatePinnedToCore(lvglTask, "LVGL", 8192, NULL, 3, &lvglTaskHandle, 0);
+    xTaskCreatePinnedToCore(wifiTask, "WiFi", 4096, NULL, 2, &wifiTaskHandle, 1);
 }
 
-#include "esp_task_wdt.h"
-
+/**
+ * @brief Arduino main loop. Idle loop; all work is done in FreeRTOS tasks.
+ */
 void loop() {
-    // Empty since tasks handle everything
-    vTaskDelay(pdMS_TO_TICKS(1000)); // Minimal delay
+    // Main loop does nothing; all work is done in tasks
+    vTaskDelay(pdMS_TO_TICKS(1000)); // Just to yield CPU
 }

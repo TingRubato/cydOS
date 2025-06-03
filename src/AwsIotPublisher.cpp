@@ -1,3 +1,9 @@
+/**
+ * @file AwsIotPublisher.cpp
+ * @brief Implements AWS IoT Core MQTT publishing for cydOS.
+ *
+ * Handles secure MQTT connection, device health, and button event publishing.
+ */
 #include "AwsIotPublisher.h"
 #include "secrets.h"
 #include <WiFi.h>
@@ -58,6 +64,7 @@ String currentTimestamp() {
              t->tm_hour, t->tm_min, t->tm_sec);
     return String(ts);
 }
+
 int postHealthStatus(int batteryLevel) {
     begin();
 
@@ -77,12 +84,76 @@ int postHealthStatus(int batteryLevel) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/qa-queue";
+    String topic = "welder-button-01/health";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Health status published successfully");
     } else {
         Serial.println("Failed to publish health status");
+    }
+
+    client.disconnect();
+    return success ? 1 : 0;
+}
+
+int postCallSupervisor(const char* supervisorId, const char* factoryZone, const char* reason) {
+    begin();
+
+    if (!client.connect(THINGNAME)) {
+        Serial.println("TLS connection failed! Cannot publish supervisor call.");
+        return 0;
+    }
+
+    JsonDocument doc;
+    doc["deviceType"]    = "caller-button";
+    doc["welderId"]      = "welder-01";
+    doc["supervisorId"]  = supervisorId;
+    doc["factoryZone"]   = factoryZone;
+    doc["reason"]        = reason;
+    doc["event"]         = "supervisor_call";
+    doc["timestamp"]     = currentTimestamp();
+
+    char jsonBuffer[512];
+    serializeJson(doc, jsonBuffer);
+
+    String topic = "welder-button-01/supervisor-calls";
+    bool success = client.publish(topic.c_str(), jsonBuffer);
+    if (success) {
+        Serial.println("Supervisor call published successfully");
+    } else {
+        Serial.println("Failed to publish supervisor call");
+    }
+
+    client.disconnect();
+    return success ? 1 : 0;
+}
+
+int postCreateTicket(const char* ticketType, const char* priority, const char* description) {
+    begin();
+
+    if (!client.connect(THINGNAME)) {
+        Serial.println("TLS connection failed! Cannot publish ticket creation.");
+        return 0;
+    }
+
+    JsonDocument doc;
+    doc["deviceType"]    = "caller-button";
+    doc["welderId"]      = "welder-01";
+    doc["ticketType"]    = ticketType;
+    doc["priority"]      = priority;
+    doc["description"]   = description;
+    doc["event"]         = "ticket_created";
+    doc["timestamp"]     = currentTimestamp();
+
+    char jsonBuffer[512];
+    serializeJson(doc, jsonBuffer);
+
+    String topic = "welder-button-01/tickets";
+    bool success = client.publish(topic.c_str(), jsonBuffer);
+    if (success) {
+        Serial.println("Ticket creation published successfully");
+    } else {
+        Serial.println("Failed to publish ticket creation");
     }
 
     client.disconnect();
@@ -98,17 +169,17 @@ int postButtonEvent(const char* assignedTo, const char* factoryZone) {
     }
 
     JsonDocument doc;
-    doc["deviceType"]  = "caller-button";
-    doc["welderId"]    = "welder-01";
-    doc["assignedTo"]  = assignedTo;
+    doc["deviceType"] = "caller-button";
+    doc["welderId"]   = "welder-01";
+    doc["assignedTo"] = assignedTo;
     doc["factoryZone"] = factoryZone;
-    doc["event"]       = "pressed";
-    doc["timestamp"]   = currentTimestamp();
+    doc["event"]      = "button_press";
+    doc["timestamp"]  = currentTimestamp();
 
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/qa-queue";
+    String topic = "welder-button-01/button-events";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Button event published successfully");
