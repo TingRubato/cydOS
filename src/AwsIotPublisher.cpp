@@ -11,6 +11,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <ui.h>
+#include "config.h"
 
 WiFiClientSecure net;
 PubSubClient client(net);
@@ -84,7 +85,7 @@ int postHealthStatus(int batteryLevel) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/health";
+    String topic = g_config.topic_name + "/health";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Health status published successfully");
@@ -116,7 +117,7 @@ int postCallSupervisor(const char* supervisorId, const char* factoryZone, const 
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/supervisor-calls";
+    String topic = g_config.topic_name + "/supervisor-calls";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Supervisor call published successfully");
@@ -148,7 +149,7 @@ int postCreateTicket(const char* ticketType, const char* priority, const char* d
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/tickets";
+    String topic = g_config.topic_name + "/tickets";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Ticket creation published successfully");
@@ -179,7 +180,7 @@ int postButtonEvent(const char* assignedTo, const char* factoryZone) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = "welder-button-01/button-events";
+    String topic = g_config.topic_name + "/button-events";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Button event published successfully");

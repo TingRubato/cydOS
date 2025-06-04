@@ -13,6 +13,8 @@
 #include <time.h>
 #include "WIFI_utils.h"
 #include <WiFi.h>
+#include "config.h"
+#include "I2C_utils.h"
 
 /**
  * @brief Callback to update the LVGL UI after WiFi connection is established.
@@ -141,8 +143,8 @@ void lvglTask(void *pvParameters) {
  * @param pvParameters Unused parameter
  */
 void wifiTask(void *pvParameters) {
-    const char *ssid = "IoT-AP";
-    const char *password = "Battery1488!!";
+    const char *ssid = g_config.wifi_ssid.c_str();
+    const char *password = g_config.wifi_password.c_str();
 
     if (connectToNetwork(ssid, password)) {
         wifiConnected = true;
@@ -166,6 +168,17 @@ void wifiTask(void *pvParameters) {
  */
 void setup() {
     Serial.begin(115200);
+    if (!loadConfig()) {
+        Serial.println("Using default config or failed to load config!");
+    }
+
+    // Initialize I2C
+    if (initI2C()) {
+        Serial.println("I2C initialized successfully");
+        scanI2CDevices();  // Scan for connected I2C devices
+    } else {
+        Serial.println("Failed to initialize I2C");
+    }
 
     // Initialize display
     tft.begin();

@@ -22,6 +22,7 @@
 #include "AwsIotPublisher.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "config.h"
 QueueHandle_t buttonQueue = NULL; // Define the queue here for use in this file and others
 
 // Global variables for NTP
@@ -267,11 +268,11 @@ void drawHomeScreen()
     lv_table_set_cell_value(table, 0, 0, "Property");
     lv_table_set_cell_value(table, 0, 1, "Value");
     
-    lv_table_set_cell_value(table, 1, 0, "Operator");
-    lv_table_set_cell_value(table, 1, 1, "Machine Folk 1");
+    lv_table_set_cell_value(table, 1, 0, "Location");
+    lv_table_set_cell_value(table, 1, 1, g_config.location.c_str());
     
-    lv_table_set_cell_value(table, 2, 0, "Location");
-    lv_table_set_cell_value(table, 2, 1, "P1 Welding");
+    lv_table_set_cell_value(table, 2, 0, "Station");
+    lv_table_set_cell_value(table, 2, 1, g_config.station.c_str());
     
     lv_table_set_cell_value(table, 3, 0, "Time");
     lv_table_set_cell_value(table, 3, 1, getCurrentTimeString().c_str());
