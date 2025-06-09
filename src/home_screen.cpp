@@ -368,7 +368,7 @@ void drawHomeScreen()
         int event_id = -1;
         switch (btn_id) {
             case 0: // QA
-                postButtonEvent("qa-team", "welding-station-1");
+                postButtonEvent("ting", "welding-station-1");
                 break;
             case 1: // Supervisor
                 postCallSupervisor("supervisor-01", "welding-station-1", "quality_check");

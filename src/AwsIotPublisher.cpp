@@ -18,41 +18,51 @@ PubSubClient client(net);
 
 void begin() {
     Serial.begin(115200); // Wake up sleepyhead
-    delay(2000); // Coffee break before we start working
     
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-        Serial.print("Attempting to connect to SSID: ");
-        Serial.println(WIFI_SSID);
-        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-        for (int i = 0; i < 10; i++) {
-            if (WiFi.status() == WL_CONNECTED) break;
-            delay(1000);
-            Serial.print(".");
-        }
-        attempts++;
-        Serial.print("WiFi.status() is: ");
-        Serial.println(WiFi.status());
+    // Initialize WiFi
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.print("Connecting to WiFi");
+    
+    // Wait for WiFi connection with timeout
+    int timeout = 0;
+    while (WiFi.status() != WL_CONNECTED && timeout < 20) {
+        delay(500);
+        Serial.print(".");
+        timeout++;
     }
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("Connected to wifi");
-    } else {
-        Serial.println("Failed to connect to WiFi after 10 attempts.");
-        while (1);
+    Serial.println();
+    
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi connection failed!");
+        return;
     }
+    
+    Serial.print("WiFi connected. IP: ");
+    Serial.println(WiFi.localIP());
 
+    // Configure TLS
     net.setCACert(SIMPLE_IOT_ROOT_CA);
     net.setCertificate(SIMPLE_IOT_DEVICE_CERT);
     net.setPrivateKey(SIMPLE_IOT_DEVICE_PRIVATE_KEY);
     
     client.setServer(AWS_IOT_ENDPOINT, 8883);
     
+    // Try to connect to AWS IoT with retries
     Serial.println("Connecting to AWS IoT endpoint via TLS...");
-    if (!client.connect(THINGNAME)) {
-        Serial.println("TLS connection failed!");
-    } else {
+    int retries = 0;
+    while (!client.connect(THINGNAME) && retries < 3) {
+        Serial.print("TLS connection attempt ");
+        Serial.print(retries + 1);
+        Serial.println(" failed!");
+        delay(1000);
+        retries++;
+    }
+    
+    if (client.connected()) {
         Serial.println("TLS connection succeeded!");
         client.disconnect();
+    } else {
+        Serial.println("All TLS connection attempts failed!");
     }
 }
 
@@ -180,7 +190,7 @@ int postButtonEvent(const char* assignedTo, const char* factoryZone) {
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer);
 
-    String topic = g_config.topic_name + "/button-events";
+    String topic = g_config.topic_name + "/qa-queue";
     bool success = client.publish(topic.c_str(), jsonBuffer);
     if (success) {
         Serial.println("Button event published successfully");
