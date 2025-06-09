@@ -12,3 +12,5 @@ managed_components/
 .aider*
 
 email-template.json
+
+data/config/device_config.json
