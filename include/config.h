@@ -4,9 +4,11 @@
 struct DeviceConfig {
     String wifi_ssid;
     String wifi_password;
+    String deviceId;
+    String department;
+    String stationId;
     String location;
-    String station;
-    String topic_name;
+    String firmwareVersion;
 };
 
 extern DeviceConfig g_config;

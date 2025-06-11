@@ -15,6 +15,16 @@
 #include <WiFi.h>
 #include "config.h"
 #include "I2C_utils.h"
+#include <Arduino.h>
+extern "C" {
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+}
+
+// Add these task configuration constants at the top of the file
+#define MQTT_TASK_STACK_SIZE 12288
+#define MQTT_TASK_PRIORITY 1
+#define MQTT_TASK_CORE 1
 
 /**
  * @brief Callback to update the LVGL UI after WiFi connection is established.
@@ -100,7 +110,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data) // Touch
         data->point.x = 240 - p.y;
         data->point.y = p.x;
         data->state = LV_INDEV_STATE_PR;
-        touchPressed = true;
+        touchPressed = true; 
     }
     else
     {
@@ -163,6 +173,47 @@ void wifiTask(void *pvParameters) {
     }
 }
 
+extern bool publishHeartbeat();
+
+void heartbeatTask(void *pvParameters) {
+    const TickType_t xDelay = pdMS_TO_TICKS(30000); // 30 seconds
+    int retryCount = 0;
+    const int maxRetries = 3;
+    
+    while (1) {
+        if (WiFi.status() == WL_CONNECTED) {
+            bool success = publishHeartbeat();
+            if (success) {
+                retryCount = 0;  // Reset retry count on success
+            } else {
+                retryCount++;
+                if (retryCount >= maxRetries) {
+                    // If we've failed too many times, try reconnecting WiFi
+                    WiFi.disconnect();
+                    WiFi.begin(g_config.wifi_ssid.c_str(), g_config.wifi_password.c_str());
+                    retryCount = 0;
+                }
+            }
+        } else {
+            // WiFi not connected, try to reconnect
+            WiFi.begin(g_config.wifi_ssid.c_str(), g_config.wifi_password.c_str());
+            retryCount = 0;
+        }
+        
+        vTaskDelay(xDelay);
+    }
+}
+
+extern void begin();
+extern void mqttLoop();
+
+void mqttLoopTask(void *pvParameters) {
+    while (1) {
+        mqttLoop();
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
 /**
  * @brief Arduino setup function. Initializes hardware, LVGL, and creates core tasks.
  */
@@ -203,9 +254,12 @@ void setup() {
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    // Create tasks
+    // Create tasks with proper configuration
     xTaskCreatePinnedToCore(lvglTask, "LVGL", 8192, NULL, 3, &lvglTaskHandle, 0);
     xTaskCreatePinnedToCore(wifiTask, "WiFi", 4096, NULL, 2, &wifiTaskHandle, 1);
+    xTaskCreatePinnedToCore(heartbeatTask, "Heartbeat", MQTT_TASK_STACK_SIZE, NULL, MQTT_TASK_PRIORITY, NULL, MQTT_TASK_CORE);
+    xTaskCreatePinnedToCore(mqttLoopTask, "MQTTLoop", 4096, NULL, 1, NULL, 1);
+    begin(); // Only call once at startup
 }
 
 /**

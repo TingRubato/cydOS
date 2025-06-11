@@ -24,8 +24,10 @@ bool loadConfig(const char* path) {
     }
     g_config.wifi_ssid = doc["wifi_ssid"] | "";
     g_config.wifi_password = doc["wifi_password"] | "";
+    g_config.deviceId = doc["deviceId"] | "";
+    g_config.department = doc["department"] | "";
+    g_config.stationId = doc["stationId"] | "";
     g_config.location = doc["location"] | "";
-    g_config.station = doc["station"] | "";
-    g_config.topic_name = doc["topic_name"] | "";
+    g_config.firmwareVersion = doc["firmwareVersion"] | "";
     return true;
 } 

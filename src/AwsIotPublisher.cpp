@@ -1,29 +1,37 @@
 /**
  * @file AwsIotPublisher.cpp
- * @brief Implements AWS IoT Core MQTT publishing for cydOS.
- *
- * Handles secure MQTT connection, device health, and button event publishing.
+ * @brief Updated AWS IoT Core MQTT publisher with unified topic structure and device info block.
  */
-#include "AwsIotPublisher.h"
+
 #include "secrets.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <ArduinoJson.h>
 #include <PubSubClient.h>
-#include <ui.h>
+#include <ArduinoJson.h>
+#include "AwsIotPublisher.h"
 #include "config.h"
 
 WiFiClientSecure net;
 PubSubClient client(net);
 
+// Helper to ensure MQTT connection is alive
+bool ensureMqttConnected() {
+    if (!client.connected()) {
+        if (!client.connect(THINGNAME)) {
+            Serial.println("TLS connection failed! Cannot publish event.");
+            Serial.print("MQTT connect state: ");
+            Serial.println(client.state());
+            return false;
+        }
+    }
+    return true;
+}
+
 void begin() {
-    Serial.begin(115200); // Wake up sleepyhead
-    
-    // Initialize WiFi
+    Serial.begin(115200);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting to WiFi");
-    
-    // Wait for WiFi connection with timeout
+
     int timeout = 0;
     while (WiFi.status() != WL_CONNECTED && timeout < 20) {
         delay(500);
@@ -31,39 +39,23 @@ void begin() {
         timeout++;
     }
     Serial.println();
-    
+
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi connection failed!");
         return;
     }
-    
+
     Serial.print("WiFi connected. IP: ");
     Serial.println(WiFi.localIP());
 
-    // Configure TLS
     net.setCACert(SIMPLE_IOT_ROOT_CA);
     net.setCertificate(SIMPLE_IOT_DEVICE_CERT);
     net.setPrivateKey(SIMPLE_IOT_DEVICE_PRIVATE_KEY);
-    
+
     client.setServer(AWS_IOT_ENDPOINT, 8883);
-    
-    // Try to connect to AWS IoT with retries
-    Serial.println("Connecting to AWS IoT endpoint via TLS...");
-    int retries = 0;
-    while (!client.connect(THINGNAME) && retries < 3) {
-        Serial.print("TLS connection attempt ");
-        Serial.print(retries + 1);
-        Serial.println(" failed!");
-        delay(1000);
-        retries++;
-    }
-    
-    if (client.connected()) {
-        Serial.println("TLS connection succeeded!");
-        client.disconnect();
-    } else {
-        Serial.println("All TLS connection attempts failed!");
-    }
+    client.setCallback(NULL);  // No callback needed for publish-only client
+    client.setKeepAlive(60);  // 60 second keepalive
+    client.setSocketTimeout(10);  // 10 second socket timeout
 }
 
 String currentTimestamp() {
@@ -76,128 +68,190 @@ String currentTimestamp() {
     return String(ts);
 }
 
-int postHealthStatus(int batteryLevel) {
-    begin();
-
-    if (!client.connect(THINGNAME)) {
-        Serial.println("TLS connection failed! Cannot publish health status.");
-        return 0;
-    }
-
-    JsonDocument doc;
-    doc["deviceType"] = "caller-button";
-    doc["welderId"]   = "welder-01";
-    doc["status"]     = "online";
-    doc["timestamp"]  = currentTimestamp();
-    doc["battery"]    = batteryLevel;
-    doc["rssi"]       = WiFi.RSSI();
-
-    char jsonBuffer[512];
-    serializeJson(doc, jsonBuffer);
-
-    String topic = g_config.topic_name + "/health";
-    bool success = client.publish(topic.c_str(), jsonBuffer);
-    if (success) {
-        Serial.println("Health status published successfully");
-    } else {
-        Serial.println("Failed to publish health status");
-    }
-
-    client.disconnect();
-    return success ? 1 : 0;
+String buildTopic() {
+    return "iot/" + g_config.department + "/" + g_config.stationId + "/" + g_config.deviceId;
 }
 
-int postCallSupervisor(const char* supervisorId, const char* factoryZone, const char* reason) {
-    begin();
-
-    if (!client.connect(THINGNAME)) {
-        Serial.println("TLS connection failed! Cannot publish supervisor call.");
-        return 0;
+/**
+ * @brief Publishes an event to AWS IoT Core with device information and custom data.
+ * 
+ * This function handles the following steps:
+ * 1. Initializes the connection by calling begin()
+ * 2. Establishes MQTT connection to AWS IoT Core
+ * 3. Creates a JSON document with:
+ *    - Device information (ID, department, station, location, firmware version)
+ *    - Event details (type, function name, timestamp)
+ *    - Any additional data passed in the extras parameter
+ * 4. Serializes the JSON to a buffer
+ * 5. Publishes the message to the configured MQTT topic
+ * 6. Handles connection cleanup
+ * 
+ * @param functionName The name of the function/event being published
+ * @param extras Additional JSON data to include in the message
+ * @return true if publish was successful, false otherwise
+ */
+bool publishEvent(const char* functionName, JsonObject& extras) {
+    if (!ensureMqttConnected()) {
+        return false;
     }
 
+    // Create JSON document with device information
     JsonDocument doc;
-    doc["deviceType"]    = "caller-button";
-    doc["welderId"]      = "welder-01";
-    doc["supervisorId"]  = supervisorId;
-    doc["factoryZone"]   = factoryZone;
-    doc["reason"]        = reason;
-    doc["event"]         = "supervisor_call";
-    doc["timestamp"]     = currentTimestamp();
+    JsonObject deviceInfo = doc["deviceInfo"].to<JsonObject>();
+    deviceInfo["deviceId"] = g_config.deviceId;
+    deviceInfo["department"] = g_config.department;
+    deviceInfo["stationId"] = g_config.stationId;
+    deviceInfo["location"] = g_config.location;
+    deviceInfo["firmwareVersion"] = g_config.firmwareVersion;
 
-    char jsonBuffer[512];
+    // Add event-specific information
+    doc["event"] = "pressed";
+    doc["function"] = functionName;
+    doc["timestamp"] = currentTimestamp();
+
+    // Add any additional data from extras parameter
+    for (JsonPair kv : extras) {
+        doc[kv.key()] = kv.value();
+    }
+
+    // Serialize JSON to buffer
+    char jsonBuffer[1024];
     serializeJson(doc, jsonBuffer);
 
-    String topic = g_config.topic_name + "/supervisor-calls";
+    // Get topic and publish message
+    String topic = buildTopic();
+    Serial.print("Publishing to topic: ");
+    Serial.println(topic);
+    Serial.print("Payload: ");
+    Serial.println(jsonBuffer);
+    Serial.print("Payload length: ");
+    Serial.println(strlen(jsonBuffer));
+    
+    // Attempt to publish and handle result
     bool success = client.publish(topic.c_str(), jsonBuffer);
+    Serial.print("Publish result: ");
+    Serial.println(success ? "success" : "failure");
+    if (!success) {
+        Serial.print("MQTT client state after publish: ");
+        Serial.println(client.state());
+    }
     if (success) {
-        Serial.println("Supervisor call published successfully");
+        Serial.println("Event published successfully");
     } else {
-        Serial.println("Failed to publish supervisor call");
+        Serial.println("Failed to publish event");
     }
 
-    client.disconnect();
-    return success ? 1 : 0;
+    return success;
 }
 
-int postCreateTicket(const char* ticketType, const char* priority, const char* description) {
-    begin();
+bool publishEvent(const String& label,
+                  const String& eventType,
+                  const String& department,
+                  int stationId,
+                  std::map<String, String> extras)
+{
+    Serial.print("MQTT client state before connect: ");
+    Serial.println(client.state());
+    if (!ensureMqttConnected()) {
+        return false;
+    }
+    Serial.print("MQTT client state after connect: ");
+    Serial.println(client.state());
 
-    if (!client.connect(THINGNAME)) {
-        Serial.println("TLS connection failed! Cannot publish ticket creation.");
-        return 0;
+    StaticJsonDocument<2048> doc;
+    doc["eventType"] = eventType;
+    doc["label"] = label;
+    doc["department"] = department;
+    doc["stationId"] = String(stationId);
+    doc["location"] = g_config.location;
+    doc["timestamp"] = currentTimestamp();
+
+    for (const auto& kv : extras) {
+        doc[kv.first] = kv.second;
     }
 
-    JsonDocument doc;
-    doc["deviceType"]    = "caller-button";
-    doc["welderId"]      = "welder-01";
-    doc["ticketType"]    = ticketType;
-    doc["priority"]      = priority;
-    doc["description"]   = description;
-    doc["event"]         = "ticket_created";
-    doc["timestamp"]     = currentTimestamp();
+    String payload;
+    serializeJson(doc, payload);
+    Serial.print("Payload length: ");
+    Serial.println(payload.length());
 
-    char jsonBuffer[512];
-    serializeJson(doc, jsonBuffer);
-
-    String topic = g_config.topic_name + "/tickets";
-    bool success = client.publish(topic.c_str(), jsonBuffer);
+    String topic = "bhs/events/" + g_config.location + "/" + department + "/" + String(stationId);
+    Serial.print("Publishing to topic: ");
+    Serial.println(topic);
+    Serial.print("Payload: ");
+    Serial.println(payload);
+    bool success = client.publish(topic.c_str(), payload.c_str());
+    Serial.print("Publish result: ");
+    Serial.println(success ? "success" : "failure");
+    Serial.print("MQTT client state after publish: ");
+    Serial.println(client.state());
+    if (!success) {
+        Serial.println("Trying test publish to 'test/topic'...");
+        bool test = client.publish("test/topic", "{\"test\":1}");
+        Serial.print("Test publish result: ");
+        Serial.println(test ? "success" : "failure");
+        Serial.print("MQTT client state after test publish: ");
+        Serial.println(client.state());
+    }
     if (success) {
-        Serial.println("Ticket creation published successfully");
+        Serial.println("Event published successfully");
     } else {
-        Serial.println("Failed to publish ticket creation");
+        Serial.println("Failed to publish event");
     }
 
-    client.disconnect();
-    return success ? 1 : 0;
+    return success;
 }
 
-int postButtonEvent(const char* assignedTo, const char* factoryZone) {
-    begin();
-
-    if (!client.connect(THINGNAME)) {
-        Serial.println("TLS connection failed! Cannot publish button event.");
-        return 0;
+bool publishHeartbeat() {
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi not connected, attempting to connect before heartbeat publish...");
+        WiFi.begin(g_config.wifi_ssid.c_str(), g_config.wifi_password.c_str());
+        unsigned long startAttemptTime = millis();
+        while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) { // 10s timeout
+            delay(500);
+            Serial.print(".");
+        }
+        Serial.println();
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("Failed to connect to WiFi, skipping heartbeat publish.");
+            return false;
+        } else {
+            Serial.println("WiFi connected for heartbeat publish.");
+        }
     }
-
+    if (!ensureMqttConnected()) {
+        return false;
+    }
+    Serial.print("MQTT client state after connect: ");
+    Serial.println(client.state());
+    
     JsonDocument doc;
-    doc["deviceType"] = "caller-button";
-    doc["welderId"]   = "welder-01";
-    doc["assignedTo"] = assignedTo;
-    doc["factoryZone"] = factoryZone;
-    doc["event"]      = "button_press";
-    doc["timestamp"]  = currentTimestamp();
+    doc["deviceId"] = g_config.deviceId;
+    doc["timestamp"] = currentTimestamp();
+    doc["firmwareVersion"] = g_config.firmwareVersion;
+    doc["status"] = "online";
+    doc["rssi"] = WiFi.RSSI();
+    doc["uptime"] = millis() / 1000;
 
-    char jsonBuffer[512];
-    serializeJson(doc, jsonBuffer);
+    String payload;
+    serializeJson(doc, payload);
 
-    String topic = g_config.topic_name + "/qa-queue";
-    bool success = client.publish(topic.c_str(), jsonBuffer);
+    String topic = "bhs/heartbeat/" + g_config.deviceId;
+    Serial.print("Publishing heartbeat to topic: ");
+    Serial.println(topic);
+    Serial.print("Payload: ");
+    Serial.println(payload);
+
+    bool success = client.publish(topic.c_str(), payload.c_str());
     if (success) {
-        Serial.println("Button event published successfully");
+        Serial.println("Heartbeat published successfully");
     } else {
-        Serial.println("Failed to publish button event");
+        Serial.println("Failed to publish heartbeat");
     }
+    return success;
+}
 
-    client.disconnect();
-    return success ? 1 : 0;
+// Add this function for use in main loop or a task
+void mqttLoop() {
+    client.loop();
 }

@@ -1,27 +1,26 @@
+#include <map>
+
 /**
  * @file AwsIotPublisher.h  
- * @brief Secure AWS IoT Core MQTT Publisher
+ * @brief AWS IoT Core MQTT Publisher with unified topic structure
  *
- * Implements MQTT over TLS 1.2 communication with AWS IoT Core including:
+ * Implements MQTT over TLS communication with AWS IoT Core including:
  * - X.509 certificate authentication
- * - QoS 1 message delivery
+ * - Device info block in all messages
+ * - Unified topic structure
  * - Automatic reconnection
- * - Offline message queuing
  *
  * Key Features:
  * - Hardware-accelerated TLS (ESP32)
- * - Low-power mode support
+ * - Configurable device info
  * - Thread-safe operation
- * - Configurable keepalive interval
  *
  * Error Handling:
  * - Network fault recovery
- * - Certificate expiry detection  
- * - Message retry logic
+ * - Connection retry logic
  *
- * @version 2.1
- * @date 2025-06-01
- * @copyright Copyright (c) 2025 BHS Inc. All Rights Reserved.
+ * @version 1.0
+ * @date 2024-03-19
  */
 
 #ifndef AWS_IOT_PUBLISHER_H
@@ -29,11 +28,8 @@
 
 #include <Arduino.h>
 #include <time.h>
-#include <ui.h>
-
-/// AWS IoT Endpoint Configuration
-#define MQTT_HOST "a36dnxxcnq6udp-ats.iot.us-east-2.amazonaws.com"
-#define MQTT_PORT 8883  ///< Standard MQTT over TLS port
+#include <map>
+#include <ArduinoJson.h>
 
 /**
  * @brief Initialize AWS IoT connection.
@@ -44,23 +40,6 @@
 void begin();
 
 /**
- * @brief Publish device health status.
- *
- * @param batteryLevel Current battery percentage (0-100).
- * @return 1 on success, 0 on failure.
- */
-int postHealthStatus(int batteryLevel);
-
-/**
- * @brief Publish button press event.
- *
- * @param assignedTo Name of person assigned to the button.
- * @param factoryZone Zone identifier where button is located.
- * @return 1 on success, 0 on failure.
- */
-int postButtonEvent(const char* assignedTo, const char* factoryZone);
-
-/**
  * @brief Get current timestamp in ISO8601 format.
  *
  * @return String containing formatted timestamp.
@@ -68,30 +47,44 @@ int postButtonEvent(const char* assignedTo, const char* factoryZone);
 String currentTimestamp();
 
 /**
- * @brief Maintain MQTT connection (call in main loop).
+ * @brief Build the MQTT topic string.
  *
- * Call this function regularly in the main loop to maintain the MQTT connection and handle incoming messages.
+ * @return String containing the formatted topic.
  */
-void awsIotLoop();
+String buildTopic();
 
 /**
- * @brief Publish supervisor call event.
+ * @brief Publish an event with additional JSON data.
  *
- * @param supervisorId Supervisor identifier.
- * @param factoryZone Zone identifier where supervisor is called.
- * @param reason Reason for the call.
- * @return 1 on success, 0 on failure.
+ * @param functionName Name of the function/event.
+ * @param extras Additional JSON data to include in the message.
+ * @return true on success, false on failure.
  */
-int postCallSupervisor(const char* supervisorId, const char* factoryZone, const char* reason);
+bool publishEvent(const char* functionName, JsonObject& extras);
 
 /**
- * @brief Publish ticket creation event.
+ * @brief Publish an event with standard parameters.
  *
- * @param ticketType Type of ticket.
- * @param priority Priority of the ticket.
- * @param description Description of the issue.
- * @return 1 on success, 0 on failure.
+ * @param label Human-readable label (e.g., "QA Inspection")
+ * @param eventType Internal type (e.g., "inspection", "ticket")
+ * @param department Department identifier (e.g., "welding")
+ * @param stationId Station identifier
+ * @param extras Optional map of additional key-value pairs
+ * @return true on success, false on failure.
  */
-int postCreateTicket(const char* ticketType, const char* priority, const char* description);
+bool publishEvent(
+    const String& label,           // Human-readable label (e.g., "QA Inspection")
+    const String& eventType,       // Internal type (e.g., "inspection", "ticket")
+    const String& department,      // e.g., "welding"
+    int stationId,                 // e.g., 1
+    std::map<String, String> extras // Optional extra info like priority or notes
+);
+
+/**
+ * @brief Publish a heartbeat message.
+ *
+ * @return true on success, false on failure.
+ */
+bool publishHeartbeat();
 
 #endif  // AWS_IOT_PUBLISHER_H

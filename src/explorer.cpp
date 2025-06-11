@@ -19,12 +19,24 @@ static void free_user_data_event_cb(lv_event_t *e) {
 }
 
 void showFileExplorer(lv_event_t *e) {
+    static bool sd_ok = false;
     if (!is_initialized) { // First time? Let me show you around...
-        if (!init_sd_card()) {
-            showError("SD init failed!");
-            return;
+        sd_ok = init_sd_card();
+        if (!sd_ok) {
+            Serial.println("SD init failed! Disabling file explorer features.");
+            // Optionally show a warning, but do not abort
         }
         is_initialized = true;
+    }
+
+    if (!sd_ok) {
+        // SD not available, show a warning or minimal UI
+        lv_obj_t *scr = lv_scr_act();
+        lv_obj_clean(scr);
+        lv_obj_t *label = lv_label_create(scr);
+        lv_label_set_text(label, "SD card not available.\nFile explorer disabled.");
+        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+        return;
     }
 
     SdFile dir;
