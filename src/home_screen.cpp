@@ -45,16 +45,16 @@ void buttonEventTask(void *pvParameters) {
             bool success = false;
             switch (buttonEvent) {
                 case 0:
-                    success = publishEvent(String("QA Inspection"), String("inspection"), String("welding"), 1, std::map<String, String>{});
+                    success = publishEvent(String("QA Inspection"), String("inspection"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{});
                     break;
                 case 1:
-                    success = publishEvent(String("Supervisor Call"), String("supervisor_call"), String("welding"), 1, std::map<String, String>{});
+                    success = publishEvent(String("Supervisor Call"), String("supervisor_call"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{});
                     break;
                 case 2:
-                    success = publishEvent(String("Create Ticket"), String("ticket"), String("welding"), 1, std::map<String, String>{{"priority", "medium"}, {"note", "Equipment requires maintenance"}});
+                    success = publishEvent(String("Create Ticket"), String("ticket"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{{"priority", "medium"}, {"note", "Equipment requires maintenance"}});
                     break;
                 case 3:
-                    success = publishEvent(String("Health Check"), String("health_status"), String("welding"), 1, std::map<String, String>{});
+                    success = publishEvent(String("Health Check"), String("health_status"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{});
                     break;
                 default:
                     break;
@@ -290,13 +290,13 @@ void drawHomeScreen() {
             bool success = false;
             switch (btn_id) {
                 case 0: // QA
-                    success = publishEvent(String("QA Inspection"), String("inspection"), String("welding"), 1, std::map<String, String>{});
+                    success = publishEvent(String("QA Inspection"), String("inspection"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{});
                     break;
                 case 1: // Supervisor
-                    success = publishEvent(String("Supervisor Call"), String("supervisor_call"), String("welding"), 1, std::map<String, String>{});
+                    success = publishEvent(String("Supervisor Call"), String("supervisor_call"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{});
                     break;
                 case 2: // Ticket
-                    success = publishEvent(String("Create Ticket"), String("ticket"), String("welding"), 1, std::map<String, String>{{"priority", "medium"}, {"note", "Equipment requires maintenance"}});
+                    success = publishEvent(String("Create Ticket"), String("ticket"), String("welding"), g_config.stationId.toInt(), std::map<String, String>{{"priority", "medium"}, {"note", "Equipment requires maintenance"}});
                     break;
                 default:
                     lv_obj_del(box);

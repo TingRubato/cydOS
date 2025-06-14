@@ -4,11 +4,16 @@
  *
  * Provides functions for WiFi initialization, connection, scanning, and credential management.
  */
-#include "WIFI_utils.h"
+#include <WIFI_utils.h>
 #include "file_utils.h"
 #include <SdFat.h>
 #include <vector>
 #include <WiFi.h>
+#if defined(ESP32)
+extern "C" {
+#include <esp_wifi.h>
+}
+#endif
 
 using std::min;
 
@@ -75,18 +80,57 @@ bool connectToNetwork(const char* ssid, const char* password) {
             delay(100);
             if (WiFi.status() == WL_CONNECTED) {
                 retryCount = 0;
+                Serial.println("[WiFi] Connected successfully!");
+                wifi_mode_t mode = WiFi.getMode();
+                Serial.print("[WiFi] Mode: ");
+                switch (mode) {
+                    case WIFI_OFF: Serial.print("OFF"); break;
+                    case WIFI_STA: Serial.print("Station"); break;
+                    case WIFI_AP: Serial.print("Access Point"); break;
+                    case WIFI_AP_STA: Serial.print("AP+Station"); break;
+                    default: Serial.print("Unknown"); break;
+                }
+                Serial.print(", Channel: ");
+                Serial.print(WiFi.channel());
+                Serial.print(", RSSI: ");
+                Serial.println(WiFi.RSSI());
                 return true;
             }
         }
-        
         if (i < maxRetries - 1) {
             WiFi.disconnect(true);
             delay(100);
             WiFi.begin(ssid, password);
         }
     }
-    
     retryCount = (retryCount + 1 < 10) ? retryCount + 1 : 10;
+    // Print error details if connection failed
+    wl_status_t status = WiFi.status();
+    Serial.print("[WiFi] Failed to connect after ");
+    Serial.print(maxRetries);
+    Serial.println(" attempts.");
+    Serial.print("[WiFi] Final status: ");
+    Serial.println(status);
+    switch (status) {
+        case WL_NO_SSID_AVAIL:
+            Serial.println("[WiFi] SSID not available.");
+            break;
+        case WL_CONNECT_FAILED:
+            Serial.println("[WiFi] Connection failed (wrong password or AP not responding).");
+            break;
+        case WL_CONNECTION_LOST:
+            Serial.println("[WiFi] Connection lost.");
+            break;
+        case WL_DISCONNECTED:
+            Serial.println("[WiFi] Disconnected.");
+            break;
+        case WL_IDLE_STATUS:
+            Serial.println("[WiFi] Idle status.");
+            break;
+        default:
+            Serial.println("[WiFi] Unknown error.");
+            break;
+    }
     return false;
 }
 
